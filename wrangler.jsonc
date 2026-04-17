@@ -3,7 +3,13 @@
 	"name": "tan-st",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-04-17",
-	"workers_dev": true,
+	"workers_dev": false,
+	"routes": [
+		{
+			"pattern": "tan.st",
+			"custom_domain": true,
+		},
+	],
 	"upload_source_maps": true,
 	"d1_databases": [
 		{
