@@ -1,13 +1,3 @@
-function getLastQueryValues(searchParams: URLSearchParams): Map<string, string> {
-  const values = new Map<string, string>();
-
-  for (const [key, value] of searchParams) {
-    values.set(key, value);
-  }
-
-  return values;
-}
-
 export class InvalidUrlError extends Error {
   constructor() {
     super("Invalid destination URL.");
@@ -31,7 +21,12 @@ export function normalizeDestinationUrl(input: string): string {
     throw new InvalidUrlError();
   }
 
-  if (url.protocol !== "https:" || url.hostname !== "tanstack.com" || url.username !== "" || url.password !== "") {
+  if (
+    url.protocol !== "https:" ||
+    url.hostname !== "tanstack.com" ||
+    url.username !== "" ||
+    url.password !== ""
+  ) {
     throw new InvalidUrlError();
   }
 
@@ -42,7 +37,9 @@ export function normalizeDestinationUrl(input: string): string {
   url.port = "";
 
   const normalizedParams = new URLSearchParams();
-  const entries = [...getLastQueryValues(url.searchParams).entries()].sort(([left], [right]) => left.localeCompare(right));
+  const entries = [...new Map(url.searchParams).entries()].sort(([left], [right]) =>
+    left.localeCompare(right),
+  );
 
   for (const [key, value] of entries) {
     normalizedParams.set(key, value);
@@ -56,7 +53,7 @@ export function normalizeDestinationUrl(input: string): string {
 export function mergeRedirectQuery(destinationUrl: string, requestUrl: URL): string {
   const destination = new URL(destinationUrl);
 
-  for (const [key, value] of getLastQueryValues(requestUrl.searchParams)) {
+  for (const [key, value] of requestUrl.searchParams) {
     destination.searchParams.set(key, value);
   }
 

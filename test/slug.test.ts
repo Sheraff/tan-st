@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { encodeBase62, isReservedSlug, padSlug, slugFromId } from "../src/slug.ts";
+import { encodeBase62, isValidSlug, padSlug, slugFromId } from "../src/slug.ts";
 
 describe("slug helpers", () => {
   it("encodes using the fixed base62 alphabet", () => {
@@ -15,16 +15,16 @@ describe("slug helpers", () => {
     expect(padSlug("z")).toBe("000z");
   });
 
-  it("checks reserved slugs case-insensitively", () => {
-    expect(isReservedSlug("API")).toBe(true);
-    expect(isReservedSlug("health")).toBe(true);
-    expect(isReservedSlug("abcd")).toBe(false);
+  it("validates base62 slugs with the minimum length", () => {
+    expect(isValidSlug("000a")).toBe(true);
+    expect(isValidSlug("abc")).toBe(false);
+    expect(isValidSlug("ab.c")).toBe(false);
   });
 
-  it("prefixes reserved generated slugs with extra zeroes", () => {
+  it("derives generated slugs directly from the padded id encoding", () => {
     expect(slugFromId(1)).toBe("0001");
     expect(slugFromId(35)).toBe("000z");
     expect(slugFromId(36)).toBe("000A");
-    expect(slugFromId(150947331)).toBe("0admin");
+    expect(slugFromId(150947331)).toBe("admin");
   });
 });

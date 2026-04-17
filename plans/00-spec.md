@@ -274,10 +274,10 @@ await fetch("https://tan.st/api/shorten", {
   method: "POST",
   headers: {
     "content-type": "application/json",
-    "authorization": `Bearer ${process.env.SHORTENER_API_TOKEN}`,
+    authorization: `Bearer ${process.env.SHORTENER_API_TOKEN}`,
   },
   body: JSON.stringify({ url: "tanstack.com?foo=1" }),
-})
+});
 ```
 
 If `tanstack.com` later moves to Cloudflare, the shortener may switch to service bindings without changing the API contract.

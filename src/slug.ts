@@ -1,4 +1,4 @@
-import { BASE62_ALPHABET, MIN_SLUG_LENGTH, RESERVED_PATHS } from "./constants.ts";
+import { BASE62_ALPHABET, MIN_SLUG_LENGTH } from "./constants.ts";
 
 const SLUG_PATTERN = /^[0-9A-Za-z]+$/;
 
@@ -27,20 +27,10 @@ export function padSlug(slug: string): string {
   return slug.padStart(MIN_SLUG_LENGTH, BASE62_ALPHABET[0]);
 }
 
-export function isReservedSlug(slug: string): boolean {
-  return RESERVED_PATHS.has(slug.toLowerCase());
-}
-
 export function isValidSlug(slug: string): boolean {
-  return SLUG_PATTERN.test(slug);
+  return slug.length >= MIN_SLUG_LENGTH && SLUG_PATTERN.test(slug);
 }
 
 export function slugFromId(id: number): string {
-  let slug = padSlug(encodeBase62(id));
-
-  while (isReservedSlug(slug)) {
-    slug = `${BASE62_ALPHABET[0]}${slug}`;
-  }
-
-  return slug;
+  return padSlug(encodeBase62(id));
 }

@@ -16,7 +16,9 @@ describe("url helpers", () => {
   it("rejects invalid destinations", () => {
     expect(() => normalizeDestinationUrl("http://tanstack.com")).toThrow(InvalidUrlError);
     expect(() => normalizeDestinationUrl("https://www.tanstack.com")).toThrow(InvalidUrlError);
-    expect(() => normalizeDestinationUrl("https://user:pass@tanstack.com")).toThrow(InvalidUrlError);
+    expect(() => normalizeDestinationUrl("https://user:pass@tanstack.com")).toThrow(
+      InvalidUrlError,
+    );
   });
 
   it("merges redirect query params with incoming values taking precedence", () => {

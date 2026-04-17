@@ -1,47 +1,69 @@
-import { methodNotAllowed, notFound } from "./http.ts";
+import { sValidator } from "@hono/standard-validator";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
+
+import { methodNotAllowed, invalidRequest, invalidUrl, notFound } from "./errors.ts";
+import { requireBearerToken } from "./auth.ts";
 import { handleDeactivate, handleShorten } from "./handlers/api.ts";
 import { handleHealth } from "./handlers/health.ts";
 import { handleRedirect } from "./handlers/redirect.ts";
+import { InvalidUrlError } from "./url.ts";
+import { shortenRequestBodySchema, slugParamsSchema } from "./validation.ts";
 
-const SINGLE_SEGMENT_PATH = /^\/([^/]+)$/;
-const DEACTIVATE_PATH = /^\/api\/links\/([^/]+)\/deactivate$/;
+const app = new Hono<{ Bindings: Env }>();
 
-export default {
-  async fetch(request, env) {
-    const { pathname } = new URL(request.url);
+const invalidRequestHook = (
+  result: { success: boolean },
+  c: Parameters<typeof invalidRequest>[0],
+) => {
+  if (!result.success) {
+    return invalidRequest(c);
+  }
+};
 
-    if (pathname === "/health") {
-      return request.method === "GET" ? handleHealth() : methodNotAllowed();
-    }
+const notFoundHook = (result: { success: boolean }, c: Parameters<typeof notFound>[0]) => {
+  if (!result.success) {
+    return notFound(c);
+  }
+};
 
-    if (pathname === "/api/shorten") {
-      return request.method === "POST" ? handleShorten(request, env) : methodNotAllowed();
-    }
+app.onError((error, c) => {
+  if (error instanceof InvalidUrlError) {
+    return invalidUrl(c);
+  }
 
-    const deactivateMatch = DEACTIVATE_PATH.exec(pathname);
+  if (error instanceof HTTPException) {
+    return error.status === 400 ? invalidRequest(c) : error.getResponse();
+  }
 
-    if (deactivateMatch !== null) {
-      const slug = deactivateMatch[1]!;
+  console.error(error);
+  return c.text("Internal Server Error", 500);
+});
 
-      return request.method === "POST"
-        ? handleDeactivate(request, env, slug)
-        : methodNotAllowed();
-    }
+app.notFound((c) => notFound(c));
 
-    if (pathname === "/") {
-      return notFound();
-    }
+app.get("/api/health", (c) => handleHealth(c));
+app.all("/api/health", (c) => methodNotAllowed(c));
 
-    const redirectMatch = SINGLE_SEGMENT_PATH.exec(pathname);
+app.post(
+  "/api/shorten",
+  requireBearerToken,
+  sValidator("json", shortenRequestBodySchema, invalidRequestHook),
+  (c) => handleShorten(c, c.req.valid("json")),
+);
+app.all("/api/shorten", (c) => methodNotAllowed(c));
 
-    if (redirectMatch !== null) {
-      const slug = redirectMatch[1]!;
+app.post(
+  "/api/links/:slug/deactivate",
+  requireBearerToken,
+  sValidator("param", slugParamsSchema, notFoundHook),
+  (c) => handleDeactivate(c, c.req.valid("param").slug),
+);
+app.all("/api/links/:slug/deactivate", (c) => methodNotAllowed(c));
 
-      return request.method === "GET"
-        ? handleRedirect(request, env, slug)
-        : methodNotAllowed();
-    }
+app.get("/:slug", sValidator("param", slugParamsSchema, notFoundHook), (c) => {
+  return handleRedirect(c, c.req.valid("param").slug);
+});
+app.all("/:slug", (c) => methodNotAllowed(c));
 
-    return notFound();
-  },
-} satisfies ExportedHandler<Env>;
+export default app;

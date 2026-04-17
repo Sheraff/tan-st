@@ -1,43 +1,44 @@
-import { ERROR_CODES, SHORT_URL_ORIGIN } from "../constants.ts";
-import { requireBearerToken } from "../auth.ts";
+import type { Context } from "hono";
+
+import { SHORT_URL_ORIGIN } from "../constants.ts";
 import { putActiveLink, putInactiveLink } from "../cache.ts";
-import { badRequest, notFound, json } from "../http.ts";
-import { assignSlug, createLink, getLinkByDestinationUrl, reactivateLink, deactivateLink, type LinkRecord } from "../repository.ts";
-import { isReservedSlug, isValidSlug, slugFromId } from "../slug.ts";
-import { InvalidUrlError, normalizeDestinationUrl } from "../url.ts";
+import { notFound } from "../errors.ts";
+import {
+  assignSlug,
+  createLink,
+  getLinkByDestinationUrl,
+  reactivateLink,
+  deactivateLink,
+  type LinkRecord,
+} from "../repository.ts";
+import { slugFromId } from "../slug.ts";
+import { normalizeDestinationUrl } from "../url.ts";
+import type { ShortenRequestBody } from "../validation.ts";
 
-interface ShortenRequestBody {
-  url?: unknown;
-}
+type AppContext = Context<{ Bindings: Env }>;
+type LinkWithSlug = LinkRecord & { slug: string };
 
-function isShortenRequestBody(value: unknown): value is ShortenRequestBody {
-  return typeof value === "object" && value !== null;
-}
-
-async function parseJsonBody(request: Request): Promise<unknown | null> {
-  try {
-    return await request.json();
-  } catch {
-    return null;
-  }
-}
-
-async function ensureAssignedSlug(env: Env, link: LinkRecord): Promise<LinkRecord & { slug: string }> {
+async function ensureAssignedSlug(env: Env, link: LinkRecord): Promise<LinkWithSlug> {
   if (link.slug !== null) {
-    return link as LinkRecord & { slug: string };
+    return link as LinkWithSlug;
   }
 
   const assigned = await assignSlug(env, link.id, slugFromId(link.id));
 
-  if (assigned === null || assigned.slug === null) {
+  if (assigned === undefined || assigned.slug === null) {
     throw new Error(`Failed to assign a slug for link ${link.id}.`);
   }
 
-  return assigned as LinkRecord & { slug: string };
+  return assigned as LinkWithSlug;
 }
 
-function shortenResponse(link: LinkRecord & { slug: string }, created: boolean, reactivated: boolean): Response {
-  return json(
+function shortenResponse(
+  c: AppContext,
+  link: LinkWithSlug,
+  created: boolean,
+  reactivated: boolean,
+): Response {
+  return c.json(
     {
       slug: link.slug,
       shortUrl: `${SHORT_URL_ORIGIN}/${link.slug}`,
@@ -49,91 +50,58 @@ function shortenResponse(link: LinkRecord & { slug: string }, created: boolean, 
   );
 }
 
-export async function handleShorten(request: Request, env: Env): Promise<Response> {
-  const authFailure = requireBearerToken(request, env);
+export async function handleShorten(c: AppContext, body: ShortenRequestBody): Promise<Response> {
+  const destinationUrl = normalizeDestinationUrl(body.url);
+  const existingLink = await getLinkByDestinationUrl(c.env, destinationUrl);
 
-  if (authFailure !== null) {
-    return authFailure;
-  }
-
-  const body = await parseJsonBody(request);
-
-  if (!isShortenRequestBody(body) || typeof body.url !== "string" || body.url.trim().length === 0) {
-    return badRequest(ERROR_CODES.invalid_request);
-  }
-
-  let destinationUrl: string;
-
-  try {
-    destinationUrl = normalizeDestinationUrl(body.url);
-  } catch (error) {
-    if (error instanceof InvalidUrlError) {
-      return badRequest(ERROR_CODES.invalid_url);
-    }
-
-    throw error;
-  }
-
-  const existingLink = await getLinkByDestinationUrl(env, destinationUrl);
-
-  if (existingLink !== null) {
-    const linkWithSlug = await ensureAssignedSlug(env, existingLink);
+  if (existingLink !== undefined) {
+    const linkWithSlug = await ensureAssignedSlug(c.env, existingLink);
 
     if (linkWithSlug.active) {
-      await putActiveLink(env, linkWithSlug.slug, linkWithSlug.destinationUrl);
-      return shortenResponse(linkWithSlug, false, false);
+      await putActiveLink(c.env, linkWithSlug.slug, linkWithSlug.destinationUrl);
+      return shortenResponse(c, linkWithSlug, false, false);
     }
 
-    const reactivatedLink = await reactivateLink(env, linkWithSlug.slug);
+    const reactivatedLink = await reactivateLink(c.env, linkWithSlug.slug);
 
-    if (reactivatedLink === null) {
+    if (reactivatedLink === undefined) {
       throw new Error(`Failed to reactivate existing link ${linkWithSlug.slug}.`);
     }
 
-    await putActiveLink(env, linkWithSlug.slug, destinationUrl);
-    return shortenResponse(reactivatedLink as LinkRecord & { slug: string }, false, true);
+    await putActiveLink(c.env, linkWithSlug.slug, destinationUrl);
+    return shortenResponse(c, reactivatedLink as LinkWithSlug, false, true);
   }
 
-  const creation = await createLink(env, destinationUrl);
-  const linkWithSlug = await ensureAssignedSlug(env, creation.link);
+  const creation = await createLink(c.env, destinationUrl);
+  const linkWithSlug = await ensureAssignedSlug(c.env, creation.link);
 
   if (!creation.created) {
     if (linkWithSlug.active) {
-      await putActiveLink(env, linkWithSlug.slug, linkWithSlug.destinationUrl);
-      return shortenResponse(linkWithSlug, false, false);
+      await putActiveLink(c.env, linkWithSlug.slug, linkWithSlug.destinationUrl);
+      return shortenResponse(c, linkWithSlug, false, false);
     }
 
-    const reactivatedLink = await reactivateLink(env, linkWithSlug.slug);
+    const reactivatedLink = await reactivateLink(c.env, linkWithSlug.slug);
 
-    if (reactivatedLink === null) {
+    if (reactivatedLink === undefined) {
       throw new Error(`Failed to reactivate raced link ${linkWithSlug.slug}.`);
     }
 
-    await putActiveLink(env, linkWithSlug.slug, destinationUrl);
-    return shortenResponse(reactivatedLink as LinkRecord & { slug: string }, false, true);
+    await putActiveLink(c.env, linkWithSlug.slug, destinationUrl);
+    return shortenResponse(c, reactivatedLink as LinkWithSlug, false, true);
   }
 
-  await putActiveLink(env, linkWithSlug.slug, destinationUrl);
-  return shortenResponse(linkWithSlug, true, false);
+  await putActiveLink(c.env, linkWithSlug.slug, destinationUrl);
+  return shortenResponse(c, linkWithSlug, true, false);
 }
 
-export async function handleDeactivate(request: Request, env: Env, slug: string): Promise<Response> {
-  const authFailure = requireBearerToken(request, env);
+export async function handleDeactivate(c: AppContext, slug: string): Promise<Response> {
+  const deactivatedLink = await deactivateLink(c.env, slug);
 
-  if (authFailure !== null) {
-    return authFailure;
+  if (deactivatedLink === undefined) {
+    return notFound(c);
   }
 
-  if (isReservedSlug(slug) || !isValidSlug(slug)) {
-    return notFound();
-  }
-
-  const deactivatedLink = await deactivateLink(env, slug);
-
-  if (deactivatedLink === null) {
-    return notFound();
-  }
-
-  await putInactiveLink(env, slug);
-  return new Response(null, { status: 204 });
+  await putInactiveLink(c.env, slug);
+  return c.body(null, 204);
 }

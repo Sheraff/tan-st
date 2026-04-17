@@ -1,13 +1,15 @@
 # tan.st
 
-Cloudflare Worker shortener for `tan.st` backed by `D1` and `KV`.
+Cloudflare Worker shortener for `tan.st` built with `Hono`, `Valibot`, `Drizzle`, `D1`, and `KV`.
 
 ## Routes
 
-- `GET /health`
+- `GET /api/health`
 - `POST /api/shorten`
 - `POST /api/links/:slug/deactivate`
 - `GET /:slug`
+
+Redirect lookups stay `KV`-first for the fast path. `D1` remains the source of truth for creation, reactivation, and deactivation.
 
 ## Local Setup
 
@@ -29,7 +31,7 @@ pnpm run cf-typegen
 SHORTENER_API_TOKEN=replace-me
 ```
 
-4. Apply the local D1 migration:
+4. Apply the local D1 migrations:
 
 ```sh
 pnpm exec wrangler d1 migrations apply D1_DATABASE --local
@@ -41,18 +43,41 @@ pnpm exec wrangler d1 migrations apply D1_DATABASE --local
 pnpm dev
 ```
 
+## Drizzle Migrations
+
+The schema lives in `src/schema.ts`. Drizzle-generated SQL migrations are committed in `migrations/` so Wrangler and the Cloudflare Vitest pool both apply the same files.
+
+When the schema changes:
+
+```sh
+pnpm run db:generate
+pnpm exec wrangler d1 migrations apply D1_DATABASE --local
+```
+
+Review the generated SQL in `migrations/` before applying it remotely.
+
 ## Checks
+
+Run the full local check suite with:
 
 ```sh
 pnpm run check
-pnpm test
 ```
 
-`pnpm run check` includes `wrangler types --check`, application type-checking, and test type-checking without local emit.
+Useful individual commands:
+
+```sh
+pnpm test
+pnpm run format
+pnpm run format:check
+pnpm run lint
+```
+
+`pnpm run check` runs the same core commands as pull request CI: Cloudflare type checks, both TypeScript projects, tests, formatting checks, and linting.
 
 ## Resource Provisioning
 
-`wrangler.jsonc` is valid for local development as-is. Because the binding IDs are intentionally omitted, Wrangler can auto-provision the production `D1` database and `KV` namespace on deploy.
+`wrangler.jsonc` is valid for local development as-is. Wrangler supports omitting the production `D1` and `KV` binding IDs so deploys can provision them automatically, but Cloudflare still documents that workflow as Beta.
 
 If you want to create the Cloudflare resources up front and pin their IDs in `wrangler.jsonc`, use:
 
@@ -65,10 +90,11 @@ Then copy the returned `database_id` and `id` values into `wrangler.jsonc`.
 
 ## Secrets Notes
 
+- `.dev.vars*` and `.env*` are gitignored.
 - Use `.dev.vars` for local secrets by default.
 - Do not use `.dev.vars` and `.env` together. If `.dev.vars` exists, Wrangler ignores `.env`.
 - If you later add `.dev.vars.<env>`, that file replaces `.dev.vars` instead of merging with it.
-- Local development uses local D1 and KV state because the bindings are not marked `remote: true`.
+- Local development uses local `D1` and `KV` state because the bindings are not marked `remote: true`.
 
 ## Deploy
 
@@ -78,7 +104,7 @@ Then copy the returned `database_id` and `id` values into `wrangler.jsonc`.
 pnpm exec wrangler secret put SHORTENER_API_TOKEN
 ```
 
-2. Apply the production migration:
+2. Apply the production migrations:
 
 ```sh
 pnpm exec wrangler d1 migrations apply D1_DATABASE --remote

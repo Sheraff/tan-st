@@ -1,4 +1,4 @@
-import { exports } from "cloudflare:workers";
+import { env, exports } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { clearState, deactivate, readJson, shorten, type ShortenResponseBody } from "./helpers.ts";
@@ -9,7 +9,7 @@ beforeEach(async () => {
 
 describe("api routes", () => {
   it("returns health without authentication", async () => {
-    const response = await exports.default.fetch("https://tan.st/health");
+    const response = await exports.default.fetch("https://tan.st/api/health");
 
     expect(response.status).toBe(200);
     expect(await readJson<{ ok: boolean }>(response)).toEqual({ ok: true });
@@ -26,6 +26,53 @@ describe("api routes", () => {
 
     expect(response.status).toBe(401);
     expect(await readJson<{ error: string }>(response)).toEqual({ error: "unauthorized" });
+  });
+
+  it("rejects unauthorized deactivate requests", async () => {
+    const response = await deactivate("000a", "wrong-token");
+
+    expect(response.status).toBe(401);
+    expect(await readJson<{ error: string }>(response)).toEqual({ error: "unauthorized" });
+  });
+
+  it("returns invalid_request when the shorten body fails validation", async () => {
+    const response = await exports.default.fetch("https://tan.st/api/shorten", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${env.SHORTENER_API_TOKEN}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({}),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await readJson<{ error: string }>(response)).toEqual({ error: "invalid_request" });
+  });
+
+  it("returns invalid_request for malformed JSON request bodies", async () => {
+    const response = await exports.default.fetch("https://tan.st/api/shorten", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${env.SHORTENER_API_TOKEN}`,
+        "content-type": "application/json",
+      },
+      body: '{"url":',
+    });
+
+    expect(response.status).toBe(400);
+    expect(await readJson<{ error: string }>(response)).toEqual({ error: "invalid_request" });
+  });
+
+  it("returns not_found when deactivate slug params fail validation", async () => {
+    const response = await exports.default.fetch("https://tan.st/api/links/abc/deactivate", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${env.SHORTENER_API_TOKEN}`,
+      },
+    });
+
+    expect(response.status).toBe(404);
+    expect(await readJson<{ error: string }>(response)).toEqual({ error: "not_found" });
   });
 
   it("normalizes destinations and reuses the same slug for canonical matches", async () => {

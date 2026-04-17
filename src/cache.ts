@@ -1,8 +1,13 @@
+import * as v from "valibot";
+
 import { KV_KEY_PREFIX } from "./constants.ts";
 
-export type CachedLink =
-  | { active: true; destinationUrl: string }
-  | { active: false };
+const cachedLinkSchema = v.union([
+  v.object({ active: v.literal(false) }),
+  v.object({ active: v.literal(true), destinationUrl: v.string() }),
+]);
+
+export type CachedLink = v.InferOutput<typeof cachedLinkSchema>;
 
 function cacheKey(slug: string): string {
   return `${KV_KEY_PREFIX}${slug}`;
@@ -10,26 +15,13 @@ function cacheKey(slug: string): string {
 
 export async function getCachedLink(env: Env, slug: string): Promise<CachedLink | null> {
   const cached = await env.LINKS_KV.get(cacheKey(slug), "json");
+  const result = v.safeParse(cachedLinkSchema, cached);
 
-  if (cached === null || typeof cached !== "object") {
+  if (!result.success) {
     return null;
   }
 
-  if ((cached as { active?: unknown }).active === false) {
-    return { active: false };
-  }
-
-  if (
-    (cached as { active?: unknown }).active === true &&
-    typeof (cached as { destinationUrl?: unknown }).destinationUrl === "string"
-  ) {
-    return {
-      active: true,
-      destinationUrl: (cached as { destinationUrl: string }).destinationUrl,
-    };
-  }
-
-  return null;
+  return result.output;
 }
 
 export async function putActiveLink(env: Env, slug: string, destinationUrl: string): Promise<void> {

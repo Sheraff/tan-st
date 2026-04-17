@@ -1,5 +1,5 @@
-import { json } from "../http.ts";
+import type { Context } from "hono";
 
-export function handleHealth(): Response {
-  return json({ ok: true });
+export function handleHealth(c: Context<{ Bindings: Env }>): Response {
+  return c.json({ ok: true });
 }

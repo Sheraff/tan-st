@@ -9,15 +9,15 @@
     {
       "binding": "D1_DATABASE",
       "database_name": "tan-st",
-      "migrations_dir": "migrations"
-    }
+      "migrations_dir": "migrations",
+    },
   ],
   "kv_namespaces": [
     {
-      "binding": "LINKS_KV"
-    }
+      "binding": "LINKS_KV",
+    },
   ],
   "secrets": {
-    "required": ["SHORTENER_API_TOKEN"]
-  }
+    "required": ["SHORTENER_API_TOKEN"],
+  },
 }

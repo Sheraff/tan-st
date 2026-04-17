@@ -5,7 +5,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import worker from "../src/index.ts";
 import { clearState, deactivate, readJson, shorten, type ShortenResponseBody } from "./helpers.ts";
 
-async function dispatch(url: string, init?: RequestInit<RequestInitCfProperties>): Promise<Response> {
+async function dispatch(
+  url: string,
+  init?: RequestInit<RequestInitCfProperties>,
+): Promise<Response> {
   const request = new Request(url, init);
   const ctx = createExecutionContext();
   const response = await worker.fetch(request, env, ctx);
@@ -33,7 +36,9 @@ describe("redirect behavior", () => {
   });
 
   it("falls back to D1 on a KV miss and repopulates the cache", async () => {
-    await env.D1_DATABASE.prepare("INSERT INTO links (slug, destination_url, active) VALUES (?, ?, 1)")
+    await env.D1_DATABASE.prepare(
+      "INSERT INTO links (slug, destination_url, active) VALUES (?, ?, 1)",
+    )
       .bind("000b", "https://tanstack.com/?a=1")
       .run();
 
@@ -53,6 +58,13 @@ describe("redirect behavior", () => {
     expect(await env.LINKS_KV.get(`slug:${createdBody.slug}`, "json")).toEqual({ active: false });
 
     const response = await dispatch(`https://tan.st/${createdBody.slug}`);
+
+    expect(response.status).toBe(404);
+    expect(await readJson<{ error: string }>(response)).toEqual({ error: "not_found" });
+  });
+
+  it("returns not_found when redirect slug params fail validation", async () => {
+    const response = await dispatch("https://tan.st/abc");
 
     expect(response.status).toBe(404);
     expect(await readJson<{ error: string }>(response)).toEqual({ error: "not_found" });
