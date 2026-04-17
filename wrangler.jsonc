@@ -15,9 +15,12 @@
 	"kv_namespaces": [
 		{
 			"binding": "LINKS_KV",
+			"id": "2a208ca4cbff4a15b5ee3a9977a34510",
 		},
 	],
 	"secrets": {
-		"required": ["SHORTENER_API_TOKEN"],
+		"required": [
+			"SHORTENER_API_TOKEN"
+		],
 	},
 }
