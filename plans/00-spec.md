@@ -66,8 +66,8 @@ Value for active links:
 
 ```json
 {
-  "active": true,
-  "destinationUrl": "https://tanstack.com/?foo=1"
+	"active": true,
+	"destinationUrl": "https://tanstack.com/?foo=1"
 }
 ```
 
@@ -75,7 +75,7 @@ Value for inactive links:
 
 ```json
 {
-  "active": false
+	"active": false
 }
 ```
 
@@ -164,7 +164,7 @@ Request:
 
 ```json
 {
-  "url": "tanstack.com?foo=1"
+	"url": "tanstack.com?foo=1"
 }
 ```
 
@@ -172,11 +172,11 @@ Success response:
 
 ```json
 {
-  "slug": "000a",
-  "shortUrl": "https://tan.st/000a",
-  "destinationUrl": "https://tanstack.com/?foo=1",
-  "created": true,
-  "reactivated": false
+	"slug": "000a",
+	"shortUrl": "https://tan.st/000a",
+	"destinationUrl": "https://tanstack.com/?foo=1",
+	"created": true,
+	"reactivated": false
 }
 ```
 
@@ -271,13 +271,13 @@ Example:
 
 ```ts
 await fetch("https://tan.st/api/shorten", {
-  method: "POST",
-  headers: {
-    "content-type": "application/json",
-    authorization: `Bearer ${process.env.SHORTENER_API_TOKEN}`,
-  },
-  body: JSON.stringify({ url: "tanstack.com?foo=1" }),
-});
+	method: "POST",
+	headers: {
+		"content-type": "application/json",
+		authorization: `Bearer ${process.env.SHORTENER_API_TOKEN}`,
+	},
+	body: JSON.stringify({ url: "tanstack.com?foo=1" }),
+})
 ```
 
 If `tanstack.com` later moves to Cloudflare, the shortener may switch to service bindings without changing the API contract.

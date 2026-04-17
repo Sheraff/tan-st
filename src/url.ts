@@ -1,61 +1,61 @@
 export class InvalidUrlError extends Error {
-  constructor() {
-    super("Invalid destination URL.");
-  }
+	constructor() {
+		super("Invalid destination URL.")
+	}
 }
 
 export function normalizeDestinationUrl(input: string): string {
-  const trimmed = input.trim();
+	const trimmed = input.trim()
 
-  if (trimmed.length === 0) {
-    throw new InvalidUrlError();
-  }
+	if (trimmed.length === 0) {
+		throw new InvalidUrlError()
+	}
 
-  const candidate = /^[a-zA-Z][a-zA-Z\d+.-]*:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`;
+	const candidate = /^[a-zA-Z][a-zA-Z\d+.-]*:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`
 
-  let url: URL;
+	let url: URL
 
-  try {
-    url = new URL(candidate);
-  } catch {
-    throw new InvalidUrlError();
-  }
+	try {
+		url = new URL(candidate)
+	} catch {
+		throw new InvalidUrlError()
+	}
 
-  if (
-    url.protocol !== "https:" ||
-    url.hostname !== "tanstack.com" ||
-    url.username !== "" ||
-    url.password !== ""
-  ) {
-    throw new InvalidUrlError();
-  }
+	if (
+		url.protocol !== "https:" ||
+		url.hostname !== "tanstack.com" ||
+		url.username !== "" ||
+		url.password !== ""
+	) {
+		throw new InvalidUrlError()
+	}
 
-  if (url.port !== "" && url.port !== "443") {
-    throw new InvalidUrlError();
-  }
+	if (url.port !== "" && url.port !== "443") {
+		throw new InvalidUrlError()
+	}
 
-  url.port = "";
+	url.port = ""
 
-  const normalizedParams = new URLSearchParams();
-  const entries = [...new Map(url.searchParams).entries()].sort(([left], [right]) =>
-    left.localeCompare(right),
-  );
+	const normalizedParams = new URLSearchParams()
+	const entries = [...new Map(url.searchParams).entries()].sort(([left], [right]) =>
+		left.localeCompare(right),
+	)
 
-  for (const [key, value] of entries) {
-    normalizedParams.set(key, value);
-  }
+	for (const [key, value] of entries) {
+		normalizedParams.set(key, value)
+	}
 
-  url.search = normalizedParams.toString();
+	url.search = normalizedParams.toString()
 
-  return url.toString();
+	return url.toString()
 }
 
 export function mergeRedirectQuery(destinationUrl: string, requestUrl: URL): string {
-  const destination = new URL(destinationUrl);
+	const destination = new URL(destinationUrl)
 
-  for (const [key, value] of requestUrl.searchParams) {
-    destination.searchParams.set(key, value);
-  }
+	for (const [key, value] of requestUrl.searchParams) {
+		destination.searchParams.set(key, value)
+	}
 
-  return destination.toString();
+	return destination.toString()
 }
