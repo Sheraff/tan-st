@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "tan-st",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-17",
+  "workers_dev": true,
+  "upload_source_maps": true,
+  "d1_databases": [
+    {
+      "binding": "D1_DATABASE",
+      "database_name": "tan-st",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "LINKS_KV"
+    }
+  ],
+  "secrets": {
+    "required": ["SHORTENER_API_TOKEN"]
+  }
+}

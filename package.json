@@ -1,0 +1,29 @@
+{
+  "name": "tan-st",
+  "version": "1.0.0",
+  "private": true,
+  "description": "tan.st Cloudflare Worker shortener",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "cf-typecheck": "wrangler types --check",
+    "check": "pnpm run cf-typecheck && tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.27.0",
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.14.7",
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.4",
+    "wrangler": "^4.83.0"
+  }
+}
