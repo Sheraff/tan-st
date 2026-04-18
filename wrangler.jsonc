@@ -15,6 +15,7 @@
 		{
 			"binding": "D1_DATABASE",
 			"database_name": "tan-st",
+			"database_id": "eedd80a1-4111-4d28-8823-8116a92d6ad8",
 			"migrations_dir": "migrations",
 		},
 	],
