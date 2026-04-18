@@ -23,6 +23,13 @@ beforeEach(async () => {
 })
 
 describe("redirect behavior", () => {
+	it("redirects the root URL to tanstack.com immediately", async () => {
+		const response = await dispatch("https://tan.st/?foo=1")
+
+		expect(response.status).toBe(302)
+		expect(response.headers.get("location")).toBe("https://tanstack.com/")
+	})
+
 	it("redirects directly from an active KV hit", async () => {
 		await env.LINKS_KV.put(
 			"slug:000a",

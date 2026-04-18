@@ -61,6 +61,11 @@ app.post(
 )
 app.all("/api/links/:slug/deactivate", (c) => methodNotAllowed(c))
 
+app.get("/", () => {
+	return Response.redirect("https://tanstack.com", 302)
+})
+app.all("/", (c) => methodNotAllowed(c))
+
 app.get("/:slug", sValidator("param", slugParamsSchema, notFoundHook), (c) => {
 	return handleRedirect(c, c.req.valid("param").slug)
 })
