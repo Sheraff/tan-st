@@ -145,7 +145,7 @@ SHORTENER_API_TOKEN=replace-me
 4. Apply the local D1 migrations:
 
 ```sh
-pnpm exec wrangler d1 migrations apply D1_DATABASE --local
+pnpm run db:migrate:local
 ```
 
 5. Start local development:
@@ -162,7 +162,7 @@ When the schema changes:
 
 ```sh
 pnpm run db:generate
-pnpm exec wrangler d1 migrations apply D1_DATABASE --local
+pnpm run db:migrate:local
 ```
 
 Review the generated SQL in `migrations/` before applying it remotely.
@@ -188,16 +188,16 @@ pnpm run lint
 
 ## Resource Provisioning
 
-`wrangler.jsonc` is valid for local development as-is. Wrangler supports omitting the production `D1` and `KV` binding IDs so deploys can provision them automatically, but Cloudflare still documents that workflow as Beta.
+`wrangler.jsonc` pins the production `D1` and `KV` resource IDs so remote Wrangler operations work directly from this repo.
 
-If you want to create the Cloudflare resources up front and pin their IDs in `wrangler.jsonc`, use:
+If you ever need to recreate the Cloudflare resources, use:
 
 ```sh
 pnpm exec wrangler d1 create tan-st
 pnpm exec wrangler kv namespace create LINKS_KV
 ```
 
-Then copy the returned `database_id` and `id` values into `wrangler.jsonc`.
+Then copy the returned `database_id` and `id` values into `wrangler.jsonc` and commit the change.
 
 ## Secrets Notes
 
@@ -218,7 +218,7 @@ pnpm exec wrangler secret put SHORTENER_API_TOKEN
 2. Apply the production migrations:
 
 ```sh
-pnpm exec wrangler d1 migrations apply D1_DATABASE --remote
+pnpm run db:migrate:remote
 ```
 
 3. Deploy the Worker:
@@ -226,5 +226,7 @@ pnpm exec wrangler d1 migrations apply D1_DATABASE --remote
 ```sh
 pnpm deploy
 ```
+
+`pnpm deploy` runs the remote D1 migrations first, then deploys the Worker. `wrangler deploy` alone does not apply D1 migrations.
 
 4. Attach the custom domain `tan.st` to the Worker in Cloudflare once the zone is ready.
