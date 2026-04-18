@@ -99,6 +99,36 @@ describe("api routes", () => {
 		})
 	})
 
+	it("accepts tanstack destinations with or without an origin", async () => {
+		const createdResponse = await shorten("/docs/start?b=2&a=1")
+		const createdBody = await readJson<ShortenResponseBody>(createdResponse)
+
+		expect(createdResponse.status).toBe(201)
+		expect(createdBody).toMatchObject({
+			destinationUrl: "https://tanstack.com/docs/start?a=1&b=2",
+			shortUrl: `https://tan.st/${createdBody.slug}`,
+			created: true,
+			reactivated: false,
+		})
+
+		for (const input of [
+			"docs/start?a=1&b=2",
+			"tanstack.com/docs/start?a=1&b=2",
+			"https://tanstack.com/docs/start?a=1&b=2",
+		]) {
+			const response = await shorten(input)
+			const body = await readJson<ShortenResponseBody>(response)
+
+			expect(response.status).toBe(200)
+			expect(body).toMatchObject({
+				slug: createdBody.slug,
+				destinationUrl: "https://tanstack.com/docs/start?a=1&b=2",
+				created: false,
+				reactivated: false,
+			})
+		}
+	})
+
 	it("reactivates inactive links with the same slug", async () => {
 		const createdResponse = await shorten("tanstack.com/docs?foo=1")
 		const createdBody = await readJson<ShortenResponseBody>(createdResponse)

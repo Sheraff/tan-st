@@ -3,8 +3,19 @@ import { describe, expect, it } from "vitest"
 import { InvalidUrlError, mergeRedirectQuery, normalizeDestinationUrl } from "../src/url.ts"
 
 describe("url helpers", () => {
-	it("normalizes tanstack destinations and sorts query params", () => {
-		expect(normalizeDestinationUrl("tanstack.com?b=2&a=1")).toBe("https://tanstack.com/?a=1&b=2")
+	it("normalizes tanstack destinations across absolute and relative input forms", () => {
+		expect(normalizeDestinationUrl("https://tanstack.com/docs/start?b=2&a=1")).toBe(
+			"https://tanstack.com/docs/start?a=1&b=2",
+		)
+		expect(normalizeDestinationUrl("tanstack.com/docs/start?b=2&a=1")).toBe(
+			"https://tanstack.com/docs/start?a=1&b=2",
+		)
+		expect(normalizeDestinationUrl("/docs/start?b=2&a=1")).toBe(
+			"https://tanstack.com/docs/start?a=1&b=2",
+		)
+		expect(normalizeDestinationUrl("docs/start?b=2&a=1")).toBe(
+			"https://tanstack.com/docs/start?a=1&b=2",
+		)
 	})
 
 	it("collapses duplicate query params to the last value and strips port 443", () => {
@@ -17,6 +28,7 @@ describe("url helpers", () => {
 		expect(() => normalizeDestinationUrl("http://tanstack.com")).toThrow(InvalidUrlError)
 		expect(() => normalizeDestinationUrl("https://www.tanstack.com")).toThrow(InvalidUrlError)
 		expect(() => normalizeDestinationUrl("https://user:pass@tanstack.com")).toThrow(InvalidUrlError)
+		expect(() => normalizeDestinationUrl("https://tanstack.com:444/docs")).toThrow(InvalidUrlError)
 	})
 
 	it("merges redirect query params with incoming values taking precedence", () => {

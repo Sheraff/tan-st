@@ -2,14 +2,125 @@
 
 Cloudflare Worker shortener for `tan.st` built with `Hono`, `Valibot`, `Drizzle`, `D1`, and `KV`.
 
-## Routes
-
-- `GET /api/health`
-- `POST /api/shorten`
-- `POST /api/links/:slug/deactivate`
-- `GET /:slug`
+## API
 
 Redirect lookups stay `KV`-first for the fast path. `D1` remains the source of truth for creation, reactivation, and deactivation.
+
+Write endpoints require an `Authorization` header:
+
+```text
+Authorization: Bearer <SHORTENER_API_TOKEN>
+```
+
+### `GET /api/health`
+
+Use this to check whether the worker is up.
+
+Request shape:
+
+- No authentication required.
+- No request body.
+
+Response:
+
+```json
+{
+	"ok": true
+}
+```
+
+### `POST /api/shorten`
+
+Create, reuse, or reactivate a short link for a `tanstack.com` URL.
+
+Request shape:
+
+- Requires bearer token authentication.
+- `Content-Type: application/json`
+- JSON body:
+
+```json
+{
+	"url": "tanstack.com/foo?bar=1"
+}
+```
+
+Notes:
+
+- `url` must be a non-empty string.
+- `url` may be a full `https://tanstack.com/...` URL, a `tanstack.com/...` shorthand, a root-relative path like `/docs/start`, or a bare relative path like `docs/start`.
+- Inputs without an origin are resolved against `https://tanstack.com`.
+- Only destinations that resolve to `https://tanstack.com/...` are accepted.
+- Query params are normalized before storage, so equivalent URLs reuse the same slug.
+
+Success response:
+
+```json
+{
+	"slug": "000a",
+	"shortUrl": "https://tan.st/000a",
+	"destinationUrl": "https://tanstack.com/foo?bar=1",
+	"created": true,
+	"reactivated": false
+}
+```
+
+Status codes:
+
+- `201` when a new short link is created.
+- `200` when the URL already exists or an inactive link is reactivated.
+
+### `POST /api/links/:slug/deactivate`
+
+Deactivate an existing short link.
+
+Request shape:
+
+- Requires bearer token authentication.
+- No request body.
+- `slug` must be base62 and at least 4 characters, for example `000a`.
+
+Response:
+
+- `204 No Content` on success.
+- Empty response body.
+
+### `GET /:slug`
+
+Resolve a short slug and redirect to the stored destination.
+
+Request shape:
+
+- No authentication required.
+- No request body.
+- `slug` must be base62 and at least 4 characters.
+
+Response:
+
+- `302 Found` redirect to the stored `destinationUrl`.
+- If the incoming request includes query params, they are merged into the destination URL.
+
+Example:
+
+- `GET /000a?qux=2` can redirect to `https://tanstack.com/foo?bar=1&qux=2`.
+
+### Error responses
+
+Errors are returned as JSON:
+
+```json
+{
+	"error": "invalid_request"
+}
+```
+
+Possible error codes:
+
+- `invalid_request` for malformed JSON or a missing/invalid request body.
+- `invalid_url` when the submitted URL is not an allowed `https://tanstack.com/...` destination.
+- `unauthorized` when the bearer token is missing or wrong.
+- `not_found` when a slug is invalid, missing, or inactive.
+- `method_not_allowed` when the endpoint does not support the HTTP method used.
 
 ## Local Setup
 

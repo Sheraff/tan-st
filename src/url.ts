@@ -4,6 +4,8 @@ export class InvalidUrlError extends Error {
 	}
 }
 
+const TANSTACK_DESTINATION_BASE = "https://tanstack.com"
+
 export function normalizeDestinationUrl(input: string): string {
 	const trimmed = input.trim()
 
@@ -11,12 +13,17 @@ export function normalizeDestinationUrl(input: string): string {
 		throw new InvalidUrlError()
 	}
 
-	const candidate = /^[a-zA-Z][a-zA-Z\d+.-]*:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`
+	const candidate =
+		/^[a-zA-Z][a-zA-Z\d+.-]*:\/\//.test(trimmed) ||
+		trimmed.startsWith("//") ||
+		!trimmed.startsWith("tanstack.com")
+			? trimmed
+			: `https://${trimmed}`
 
 	let url: URL
 
 	try {
-		url = new URL(candidate)
+		url = new URL(candidate, TANSTACK_DESTINATION_BASE)
 	} catch {
 		throw new InvalidUrlError()
 	}
