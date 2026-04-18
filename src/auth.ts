@@ -1,21 +1,21 @@
 import type { MiddlewareHandler } from "hono"
+import { bearerAuth } from "hono/bearer-auth"
+import { HTTPException } from "hono/http-exception"
 
-import { AUTHORIZATION_SCHEME } from "./constants.ts"
 import { unauthorized } from "./errors.ts"
 
+const bearerTokenAuth = bearerAuth({
+	verifyToken: async (token, c) => token === c.env.SHORTENER_API_TOKEN,
+})
+
 export const requireBearerToken: MiddlewareHandler<{ Bindings: Env }> = async (c, next) => {
-	const authorization = c.req.header("authorization")
-	const prefix = `${AUTHORIZATION_SCHEME} `
+	try {
+		await bearerTokenAuth(c, next)
+	} catch (error) {
+		if (error instanceof HTTPException && error.getResponse().headers.has("WWW-Authenticate")) {
+			return unauthorized(c)
+		}
 
-	if (authorization === undefined || !authorization.startsWith(prefix)) {
-		return unauthorized(c)
+		throw error
 	}
-
-	const token = authorization.slice(prefix.length)
-
-	if (token.length === 0 || token !== c.env.SHORTENER_API_TOKEN) {
-		return unauthorized(c)
-	}
-
-	await next()
 }

@@ -35,6 +35,20 @@ describe("api routes", () => {
 		expect(await readJson<{ error: string }>(response)).toEqual({ error: "unauthorized" })
 	})
 
+	it("rejects requests with a non-bearer authorization header", async () => {
+		const response = await exports.default.fetch("https://tan.st/api/shorten", {
+			method: "POST",
+			headers: {
+				authorization: "Basic wrong-token",
+				"content-type": "application/json",
+			},
+			body: JSON.stringify({ url: "tanstack.com" }),
+		})
+
+		expect(response.status).toBe(401)
+		expect(await readJson<{ error: string }>(response)).toEqual({ error: "unauthorized" })
+	})
+
 	it("returns invalid_request when the shorten body fails validation", async () => {
 		const response = await exports.default.fetch("https://tan.st/api/shorten", {
 			method: "POST",
