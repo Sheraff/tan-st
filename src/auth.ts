@@ -4,7 +4,7 @@ import { HTTPException } from "hono/http-exception"
 
 import { unauthorized } from "#/errors.ts"
 
-const bearerTokenAuth = bearerAuth({
+const bearerTokenAuth = bearerAuth<{ Bindings: Env }>({
 	verifyToken: async (token, c) => token === c.env.SHORTENER_API_TOKEN,
 })
 
