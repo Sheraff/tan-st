@@ -40,10 +40,10 @@ app.onError((error, c) => {
 	return c.text("Internal Server Error", 500)
 })
 
-app.notFound((c) => notFound(c))
+app.notFound(notFound)
 
-app.get("/api/health", (c) => handleHealth(c))
-app.all("/api/health", (c) => methodNotAllowed(c))
+app.get("/api/health", handleHealth)
+app.all("/api/health", methodNotAllowed)
 
 app.post(
 	"/api/shorten",
@@ -51,7 +51,7 @@ app.post(
 	sValidator("json", shortenRequestBodySchema, invalidRequestHook),
 	(c) => handleShorten(c, c.req.valid("json")),
 )
-app.all("/api/shorten", (c) => methodNotAllowed(c))
+app.all("/api/shorten", methodNotAllowed)
 
 app.post(
 	"/api/links/:slug/deactivate",
@@ -59,16 +59,14 @@ app.post(
 	sValidator("param", slugParamsSchema, notFoundHook),
 	(c) => handleDeactivate(c, c.req.valid("param").slug),
 )
-app.all("/api/links/:slug/deactivate", (c) => methodNotAllowed(c))
+app.all("/api/links/:slug/deactivate", methodNotAllowed)
 
-app.get("/", () => {
-	return Response.redirect("https://tanstack.com", 302)
-})
-app.all("/", (c) => methodNotAllowed(c))
+app.get("/", () => Response.redirect("https://tanstack.com", 302))
+app.all("/", methodNotAllowed)
 
-app.get("/:slug", sValidator("param", slugParamsSchema, notFoundHook), (c) => {
-	return handleRedirect(c, c.req.valid("param").slug)
-})
-app.all("/:slug", (c) => methodNotAllowed(c))
+app.get("/:slug", sValidator("param", slugParamsSchema, notFoundHook), (c) =>
+	handleRedirect(c, c.req.valid("param").slug),
+)
+app.all("/:slug", methodNotAllowed)
 
 export default app

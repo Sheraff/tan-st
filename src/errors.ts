@@ -1,6 +1,14 @@
 import type { Context } from "hono"
 
-import { ERROR_CODES, type ErrorCode } from "./constants.ts"
+const ERROR_CODES = {
+	invalid_url: "invalid_url",
+	invalid_request: "invalid_request",
+	unauthorized: "unauthorized",
+	not_found: "not_found",
+	method_not_allowed: "method_not_allowed",
+} as const
+
+type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES]
 
 type AppContext = Context<{ Bindings: Env }>
 

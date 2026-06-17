@@ -11,7 +11,7 @@ const dbCache = new WeakMap<Env["D1_DATABASE"], ReturnType<typeof createDb>>()
 export function getDb(env: Env) {
 	const existing = dbCache.get(env.D1_DATABASE)
 
-	if (existing !== undefined) {
+	if (existing) {
 		return existing
 	}
 
