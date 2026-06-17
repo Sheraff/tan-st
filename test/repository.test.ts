@@ -8,7 +8,7 @@ import {
 	getLinkByDestinationUrl,
 	getLinkBySlug,
 	reactivateLink,
-} from "../src/repository.ts"
+} from "#/repository.ts"
 import { clearState } from "./helpers.ts"
 
 beforeEach(async () => {

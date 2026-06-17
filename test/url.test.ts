@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { InvalidUrlError, mergeRedirectQuery, normalizeDestinationUrl } from "../src/url.ts"
+import { InvalidUrlError, mergeRedirectQuery, normalizeDestinationUrl } from "#/url.ts"
 
 describe("url helpers", () => {
 	it("normalizes tanstack destinations across absolute and relative input forms", () => {

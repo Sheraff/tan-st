@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { encodeBase62, isValidSlug, padSlug, slugFromId } from "../src/slug.ts"
+import { encodeBase62, isValidSlug, padSlug, slugFromId } from "#/slug.ts"
 
 describe("slug helpers", () => {
 	it("encodes using the fixed base62 alphabet", () => {

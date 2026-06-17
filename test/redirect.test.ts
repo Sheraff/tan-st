@@ -2,7 +2,7 @@ import { env, exports } from "cloudflare:workers"
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test"
 import { beforeEach, describe, expect, it } from "vitest"
 
-import worker from "../src/index.ts"
+import worker from "#/index.ts"
 import { clearState, deactivate, readJson, shorten, type ShortenResponseBody } from "./helpers.ts"
 
 async function dispatch(
