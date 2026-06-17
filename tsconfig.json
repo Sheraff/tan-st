@@ -13,7 +13,10 @@
 		"exactOptionalPropertyTypes": true,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
-		"types": ["node"]
+		"types": ["node"],
+		"paths": {
+			"#/*": ["./src/*"]
+		}
 	},
 	"include": ["src/**/*.ts", "vitest.config.ts", "worker-configuration.d.ts"],
 	"exclude": ["node_modules", "test"]

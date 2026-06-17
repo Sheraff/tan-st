@@ -1,8 +1,8 @@
 import type { Context } from "hono"
 
-import { SHORT_URL_ORIGIN } from "../constants.ts"
-import { putActiveLink, putInactiveLink } from "../cache.ts"
-import { notFound } from "../errors.ts"
+import { SHORT_URL_ORIGIN } from "#/constants.ts"
+import { putActiveLink, putInactiveLink } from "#/cache.ts"
+import { notFound } from "#/errors.ts"
 import {
 	assignSlug,
 	createLink,
@@ -10,10 +10,10 @@ import {
 	reactivateLink,
 	deactivateLink,
 	type LinkRecord,
-} from "../repository.ts"
-import { slugFromId } from "../slug.ts"
-import { normalizeDestinationUrl } from "../url.ts"
-import type { ShortenRequestBody } from "../validation.ts"
+} from "#/repository.ts"
+import { slugFromId } from "#/slug.ts"
+import { normalizeDestinationUrl } from "#/url.ts"
+import type { ShortenRequestBody } from "#/validation.ts"
 
 type AppContext = Context<{ Bindings: Env }>
 type LinkWithSlug = LinkRecord & { slug: string }

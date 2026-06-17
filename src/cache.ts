@@ -1,6 +1,6 @@
 import * as v from "valibot"
 
-import { KV_KEY_PREFIX } from "./constants.ts"
+import { KV_KEY_PREFIX } from "#/constants.ts"
 
 const cachedLinkSchema = v.union([
 	v.object({ active: v.literal(false) }),

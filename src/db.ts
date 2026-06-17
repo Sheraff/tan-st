@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/d1"
 
-import * as schema from "./schema.ts"
+import * as schema from "#/schema.ts"
 
 function createDb(database: Env["D1_DATABASE"]) {
 	return drizzle(database, { schema })

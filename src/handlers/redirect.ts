@@ -1,9 +1,9 @@
 import type { Context } from "hono"
 
-import { getCachedLink, putActiveLink, putInactiveLink } from "../cache.ts"
-import { notFound } from "../errors.ts"
-import { getLinkBySlug } from "../repository.ts"
-import { mergeRedirectQuery } from "../url.ts"
+import { getCachedLink, putActiveLink, putInactiveLink } from "#/cache.ts"
+import { notFound } from "#/errors.ts"
+import { getLinkBySlug } from "#/repository.ts"
+import { mergeRedirectQuery } from "#/url.ts"
 
 export async function handleRedirect(
 	c: Context<{ Bindings: Env }>,

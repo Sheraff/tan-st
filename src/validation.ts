@@ -1,6 +1,6 @@
 import * as v from "valibot"
 
-import { isValidSlug } from "./slug.ts"
+import { isValidSlug } from "#/slug.ts"
 
 export const shortenRequestBodySchema = v.object({
 	url: v.pipe(

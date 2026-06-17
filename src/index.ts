@@ -2,13 +2,13 @@ import { sValidator } from "@hono/standard-validator"
 import { Hono } from "hono"
 import { HTTPException } from "hono/http-exception"
 
-import { methodNotAllowed, invalidRequest, invalidUrl, notFound } from "./errors.ts"
-import { requireBearerToken } from "./auth.ts"
-import { handleDeactivate, handleShorten } from "./handlers/api.ts"
-import { handleHealth } from "./handlers/health.ts"
-import { handleRedirect } from "./handlers/redirect.ts"
-import { InvalidUrlError } from "./url.ts"
-import { shortenRequestBodySchema, slugParamsSchema } from "./validation.ts"
+import { methodNotAllowed, invalidRequest, invalidUrl, notFound } from "#/errors.ts"
+import { requireBearerToken } from "#/auth.ts"
+import { handleDeactivate, handleShorten } from "#/handlers/api.ts"
+import { handleHealth } from "#/handlers/health.ts"
+import { handleRedirect } from "#/handlers/redirect.ts"
+import { InvalidUrlError } from "#/url.ts"
+import { shortenRequestBodySchema, slugParamsSchema } from "#/validation.ts"
 
 const app = new Hono<{ Bindings: Env }>()
 

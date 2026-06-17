@@ -1,4 +1,4 @@
-import { BASE62_ALPHABET, MIN_SLUG_LENGTH } from "./constants.ts"
+import { BASE62_ALPHABET, MIN_SLUG_LENGTH } from "#/constants.ts"
 
 const SLUG_PATTERN = /^[0-9A-Za-z]+$/
 

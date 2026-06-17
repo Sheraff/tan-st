@@ -2,7 +2,7 @@ import type { MiddlewareHandler } from "hono"
 import { bearerAuth } from "hono/bearer-auth"
 import { HTTPException } from "hono/http-exception"
 
-import { unauthorized } from "./errors.ts"
+import { unauthorized } from "#/errors.ts"
 
 const bearerTokenAuth = bearerAuth({
 	verifyToken: async (token, c) => token === c.env.SHORTENER_API_TOKEN,

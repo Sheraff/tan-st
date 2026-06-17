@@ -1,7 +1,7 @@
 import { and, eq, isNull, sql } from "drizzle-orm"
 
-import { getDb } from "./db.ts"
-import { links } from "./schema.ts"
+import { getDb } from "#/db.ts"
+import { links } from "#/schema.ts"
 
 export type LinkRecord = typeof links.$inferSelect
 
